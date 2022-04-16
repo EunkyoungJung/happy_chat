@@ -3,46 +3,61 @@ import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 
-class ChatConsumer(WebsocketConsumer):
-    def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'chat_%s' % self.room_name
 
-        # Join room group
-        async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name,
-            self.channel_name
+class ChatController:
+    def __init__(self, consumer):
+        self.consumer = consumer
+    
+    def get_room_name(self):
+        return self.consumer.scope['url_route']['kwargs']['room_name']
+
+    def get_room_group_name(self):
+        return 'chat_{}'.format(self.get_room_name())
+
+    def join_room_group(self):
+        async_to_sync(self.consumer.channel_layer.group_add)(
+            self.get_room_group_name(), 
+            self.consumer.channel_name
         )
+        self.consumer.accept()
 
-        self.accept()
-
-    def disconnect(self, close_code):
-        # Leave room group
-        async_to_sync(self.channel_layer.group_discard)(
-            self.room_group_name,
-            self.channel_name
+    def leave_room_group(self):
+        async_to_sync(self.consumer.channel_layer.group_discard)(
+            self.get_room_group_name(),
+            self.consumer.channel_name
         )
-
-        # pass
-
-    def receive(self, text_data):
+    
+    def send_msg_to_room_group(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
-
-        # Send message to room group
-        async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name,
+        async_to_sync(self.consumer.channel_layer.group_send)(
+            self.get_room_group_name(),
             {
                 'type': 'chat_message',
                 'message': message
             }
         )
     
-    # Receive message from room group
-    def chat_message(self, event):
+    def broadcast_msg_to_room_group(self, event):
         message = event['message']
-
-        # Send message to WebSocket
-        self.send(text_data=json.dumps({
+        self.consumer.send(text_data=json.dumps({
             'message': message
         }))
+
+
+class ChatConsumer(WebsocketConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.controller = ChatController(self)
+
+    def connect(self):
+        self.controller.join_room_group()
+
+    def disconnect(self, close_code):
+        self.controller.leave_room_group()
+
+    def receive(self, text_data):
+        self.controller.send_msg_to_room_group(text_data)
+
+    def chat_message(self, event):
+        self.controller.broadcast_msg_to_room_group(event)
