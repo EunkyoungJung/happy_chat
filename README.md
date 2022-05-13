@@ -73,3 +73,54 @@ room1.toracle
 - 어떤 메세지를
 - 언제
 
+---
+
+저장을 어떻게 할까? 뭘 저장해야 하나?
+
+속도 측면에서 RDB보다는 NoSQL을 쓰는 경우가 많다고 한다.
+
+- 누가 (User, WebSocket ID)
+- 어디에서 (Room, IP)
+- 무엇을
+- 언제
+
+Who generates id?
+
+- receiver, sender
+- server, client (distribted)
+- ----> <uuid>
+- <uuid> ---->
+
+uuid.uuid4()
+uuid.uuid4()
+uuid.uuid4()
+uuid.uuid4()
+
+DB replication. cluster.
+ZooKeeper: ID generation server
+
+- 아파치 주키퍼는 아파치 소프트웨어 재단 프로젝트중의 한 소프트웨어 프로젝트로서 공개 분산형 구성 서비스, 동기 서비스 및 대용량 분산 시스템을 위한 네이밍 레지스트리를 제공한다. 주키퍼는 하둡의 한 하위 프로젝트이었으나 지금은 독립적인 상위 프로젝트이다.
+
+Message
+
+- id (system id) --- integer, incremental, predictable GET /messages/{uuid}/ - security. distributed.
+- uuid (logical id)
+- sender
+- room
+- created_at
+
+Room
+
+- id (system id)
+- uuid (logical id)
+- name
+- participant_count
+- message_count
+- created_at
+
+/\*
+UserSocket
+
+- User
+- WebSocket ID
+  \*/
