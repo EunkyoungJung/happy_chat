@@ -12,6 +12,16 @@
     {{ room_name|json_script:"room-name" }}
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
+
+        function getUserName() {
+            const userNameCandidate = "{{ username_candidate }}";
+            const storedUserName = localStorage.getItem("username");
+            const userName = storedUserName || userNameCandidate;
+            localStorage.setItem("username", userName);
+            return userName;
+        }
+
+        const userName = getUserName();
         
         const chatSocket = new WebSocket(
             'ws://'

@@ -101,12 +101,121 @@ ZooKeeper: ID generation server
 
 - 아파치 주키퍼는 아파치 소프트웨어 재단 프로젝트중의 한 소프트웨어 프로젝트로서 공개 분산형 구성 서비스, 동기 서비스 및 대용량 분산 시스템을 위한 네이밍 레지스트리를 제공한다. 주키퍼는 하둡의 한 하위 프로젝트이었으나 지금은 독립적인 상위 프로젝트이다.
 
+MySQL storage engine. disk. PK sorting.
+InnoDB PK
+
+1
+2
+3
+4
+5
+
+[ ] [ ] [ ] [ ] [ ]
+
+1
+3
+4
+6
+2
+
+[ ] [ ] [ ] [ ]
+
+[ ] [^] [ ] [ ] [ ]
+
+[memory]
+[ disk ]
+
+RDB (SQLite. file. has memory engine also)
+MongoDB (DB)
+
+Redis (cache, k/v) -- memory
+
+Query --> [ ResultSet <-- Disk ]
+<Cursor>
+cursor.next() -
+
+Server-side cursor, Client-side cursor
+
+python mysql driver
+pymysql
+mysql-client, mysqldb (mysqlclient C module)
+https://mysqlclient.readthedocs.io/user_guide.html
+https://docs.djangoproject.com/en/4.0/ref/databases/#server-side-cursors
+
+qs = Message.objects.filter(room=1)
+for message in qs:
+
+qs.count() > 100000
+
+for message in qs: <--- eval on qs.
+qs.\_resultset
+<- model Message() \* 100000
+memory, CPU
+server down. severe CPU. 10min. -> crash. DB.
+<---------------->
+x DB [create instances in memory]
+
+for message in qs.iterator():
+<--- doesn't make qs.\_resultset
+
+table. know how large it will grow.
+
+User 1m
+
+Log.
+
+User .
+Room .
+Message
+
+!= N+1
+
+---
+
+## Room
+
+1 | test1 |
+2 | test2 |
+
+## Message
+
+1 | 1 | hello world
+2 | 1 | hi!
+3 | 1 | hi
+
+(1) \* 3 = 6
+1 + N row
+
+## Message + Room name
+
+qs = Message.filter(room=1)
+
+for message in qs:
+print(message.room.name, message.content)
+
+---
+
+emoji.
+
+- DATABASES.
+
+- MySQL . CREATE DATABASE heppy_chat DEFAULT CHARACTER SET utf8. var. ASCII 1byte. CJK 2byte. Emoji 3byte. utf8 mb4
+
+AbstractUser
+
+- id
+- username
+- password
+- joined_at
+- email
+
 Message
 
 - id (system id) --- integer, incremental, predictable GET /messages/{uuid}/ - security. distributed.
 - uuid (logical id)
 - sender
 - room
+- content
 - created_at
 
 Room
@@ -117,6 +226,14 @@ Room
 - participant_count
 - message_count
 - created_at
+
+RoomManager
+
+- id (system id)
+- room
+- member
+- created_at
+- deleted_at
 
 /\*
 UserSocket
